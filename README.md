@@ -22,16 +22,15 @@ The dnsmasq config is mounted from `/etc/dnsmasq/dnsmasq.conf` so you can overrw
 | ------------------------- | ------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------ |
 | INGRESS_SERVICE_NAMESPACE |                          | None **Required**              | The namespace that contains the LoadBalancer service for your ingress controller           |
 | INGRESS_SERVICE_NAME      |                          | None **Required**              | The name of the LoadBalancer service used for routing of your ingress controller           |
-| INGRESS_CLASS             |                          | nginx _Optional_               | If mode is set to all or class (makes it required), it will use ingresses from this class  |
 | INGRESS_PROVIDER          | `ingress`, `traefik`     | ingress _Optional_             | Configures what resources the controller watches for ingress hosts                         |
-| MODE                      | `all, class, annotation` | `all`                          | Mode in which the ingress watcher runs in                                                  |
+| MODE                      | `all, annotation`        | `annotation`                   | Mode in which the ingress watcher runs in                                                  |
 | HOSTS_PATH                |                          | `/hosts` (Make sure exists)    | The directory (which must match from dnsmasq.conf) that ingress hosts files will be put in |
 
 ## Monitoring Ingresses
 
 There is a couple ways to monitor ingress resources, and they can all be used at once if needed.
 
-You can target by ingress class, annotation, or both.
+You can target by annotation, or no filter at the moment, planning on more filtering in the future, with labels, ingress class, ect.
 
 ### Annotations
 
@@ -42,9 +41,3 @@ metadata:
   annotations:
     dstn.to/ingress-dns: "true"
 ```
-
-### Ingress Class
-
-Ingress class is fairly easy, as you probably already have a class in your ingress resource, which means you don't need to make any changes there, just specify the `INGRESS_CLASS` environment variable with the class you want to watch resources from.
-
-Should also make sure the `MODE` env is set properly, if you don't want to listen to the annotation as well you should set the mode to `class`

@@ -60,17 +60,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 		}
 
 		for _, ingress := range ingresses {
-			serviceIngressClass := util.Getenv("INGRESS_CLASS", "")
-
-			if serviceIngressClass == "" && util.ApplicationMode != "annotation" {
-				serviceIngressClass = "nginx"
-			}
-
-			if util.ApplicationMode == "class" && ingress.Spec.IngressClassName != &serviceIngressClass {
-				continue
-			} else if util.ApplicationMode == "annotation" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
-				continue
-			} else if ingress.Spec.IngressClassName != &serviceIngressClass && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
+			if util.ApplicationMode == "annotation" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
 				continue
 			}
 
