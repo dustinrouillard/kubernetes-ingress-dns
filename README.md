@@ -23,6 +23,7 @@ The dnsmasq config is mounted from `/etc/dnsmasq/dnsmasq.conf` so you can overrw
 | INGRESS_SERVICE_NAMESPACE |                          | None **Required**              | The namespace that contains the LoadBalancer service for your ingress controller           |
 | INGRESS_SERVICE_NAME      |                          | None **Required**              | The name of the LoadBalancer service used for routing of your ingress controller           |
 | INGRESS_CLASS             |                          | nginx _Optional_               | If mode is set to all or class (makes it required), it will use ingresses from this class  |
+| INGRESS_PROVIDER          | `ingress`, `traefik`     | ingress _Optional_             | Configures what resources the controller watches for ingress hosts                         |
 | MODE                      | `all, class, annotation` | `all`                          | Mode in which the ingress watcher runs in                                                  |
 | HOSTS_PATH                |                          | `/hosts` (Make sure exists)    | The directory (which must match from dnsmasq.conf) that ingress hosts files will be put in |
 

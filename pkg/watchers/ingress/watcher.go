@@ -68,7 +68,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 			if util.ApplicationMode == "class" && ingress.Spec.IngressClassName != &serviceIngressClass {
 				continue
-			} else if util.ApplicationMode != "class" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
+			} else if util.ApplicationMode == "annotation" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
 				continue
 			}
 

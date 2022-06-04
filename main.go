@@ -23,13 +23,14 @@ import (
 )
 
 func main() {
-	// Kubernetes Ingress
 	client, err := kubernetes.NewForConfig(KubernetesConfig())
 	if err != nil {
 		log.Println(err)
 	}
 
-	go func() {
+	provider := util.Getenv("INGRESS_PROVIDER", "ingress")
+
+	if provider == "ingress" {
 		ingress := IngressWatcher.New(client, func(payload *util.Payload) {
 			_, ctx := errgroup.WithContext(context.Background())
 
@@ -68,63 +69,62 @@ func main() {
 		if err := ingressErrorGroup.Wait(); err != nil {
 			log.Println(err)
 		}
-	}()
+	} else if provider == "traefik" {
+		traefikClient, traefikErr := versioned.NewForConfig(KubernetesConfig())
+		if traefikErr != nil {
+			log.Println(traefikErr)
+		}
 
-	// Traefik IngressRoute
-	traefikClient, traefikErr := versioned.NewForConfig(KubernetesConfig())
-	if traefikErr != nil {
-		log.Println(traefikErr)
-	}
+		traefik := TraefikWatcher.New(traefikClient, func(payload *util.Payload) {
+			_, ctx := errgroup.WithContext(context.Background())
 
-	traefik := TraefikWatcher.New(traefikClient, func(payload *util.Payload) {
-		_, ctx := errgroup.WithContext(context.Background())
+			lines := []string{}
 
-		lines := []string{}
+			for _, ingress := range payload.Ingresses {
+				serviceNameSpace := os.Getenv("INGRESS_SERVICE_NAMESPACE")
+				serviceName := os.Getenv("INGRESS_SERVICE_NAME")
 
-		for _, ingress := range payload.Ingresses {
-			serviceNameSpace := os.Getenv("INGRESS_SERVICE_NAMESPACE")
-			serviceName := os.Getenv("INGRESS_SERVICE_NAME")
-
-			ingressService, err := client.CoreV1().Services(serviceNameSpace).Get(ctx, serviceName, v1.GetOptions{})
-
-			if err != nil {
-				log.Println(err)
-			}
-
-			ingressLoadbalancerIp := ingressService.Status.LoadBalancer.Ingress[len(ingressService.Status.LoadBalancer.Ingress)-1].IP
-
-			hosts := []string{}
-
-			for _, rule := range ingress.Traefik.Spec.Routes {
-				parsed, err := TraefikHttp.ParseDomains(rule.Match)
+				ingressService, err := client.CoreV1().Services(serviceNameSpace).Get(ctx, serviceName, v1.GetOptions{})
 
 				if err != nil {
 					log.Println(err)
 				}
 
-				if parsed == nil {
-					continue
+				ingressLoadbalancerIp := ingressService.Status.LoadBalancer.Ingress[len(ingressService.Status.LoadBalancer.Ingress)-1].IP
+
+				hosts := []string{}
+
+				for _, rule := range ingress.Traefik.Spec.Routes {
+					parsed, err := TraefikHttp.ParseDomains(rule.Match)
+
+					if err != nil {
+						log.Println(err)
+					}
+
+					if parsed == nil {
+						continue
+					}
+
+					hosts = append(hosts, parsed[len(parsed)-1])
 				}
 
-				hosts = append(hosts, parsed[len(parsed)-1])
+				if len(hosts) > 0 {
+					lines = append(lines, ingressLoadbalancerIp+" "+strings.Join(hosts, " "))
+				}
 			}
 
-			if len(hosts) > 0 {
-				lines = append(lines, ingressLoadbalancerIp+" "+strings.Join(hosts, " "))
-			}
+			util.WriteHosts(lines, "traefik.hosts")
+		})
+
+		treafikErrorGroup, ctx := errgroup.WithContext(context.Background())
+
+		treafikErrorGroup.Go(func() error {
+			return traefik.Run(ctx)
+		})
+
+		if err := treafikErrorGroup.Wait(); err != nil {
+			log.Println(err)
 		}
-
-		util.WriteHosts(lines, "traefik.hosts")
-	})
-
-	treafikErrorGroup, ctx := errgroup.WithContext(context.Background())
-
-	treafikErrorGroup.Go(func() error {
-		return traefik.Run(ctx)
-	})
-
-	if err := treafikErrorGroup.Wait(); err != nil {
-		log.Println(err)
 	}
 }
 

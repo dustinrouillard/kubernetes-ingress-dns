@@ -52,7 +52,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 				serviceIngressClass = "nginx"
 			}
 
-			if util.ApplicationMode != "class" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
+			if util.ApplicationMode == "annotation" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
 				continue
 			}
 
