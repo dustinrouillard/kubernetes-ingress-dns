@@ -70,6 +70,8 @@ func (w *Watcher) Run(ctx context.Context) error {
 				continue
 			} else if util.ApplicationMode == "annotation" && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
 				continue
+			} else if ingress.Spec.IngressClassName != &serviceIngressClass && ingress.Annotations["dstn.to/ingress-dns"] != "true" {
+				continue
 			}
 
 			ingressPayload := util.IngressPayload{
