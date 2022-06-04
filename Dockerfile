@@ -1,5 +1,7 @@
 FROM golang:1.18-alpine AS builder
 
+LABEL org.opencontainers.image.source https://github.com/dustinrouillard/kubernetes-ingress-dns
+
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 

@@ -16,7 +16,7 @@ spec:
       serviceAccountName: kubernetes-ingress-dns-controller
       containers:
         - name: kubernetes-ingress-dns
-          image: ghcr.io/dustinrouillard/kubernetes-ingress-dns/ingress-dns
+          image: ghcr.io/dustinrouillard/kubernetes-ingress-dns
           env:
             - name: INGRESS_SERVICE_NAMESPACE
               value: traefik
